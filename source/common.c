@@ -6,23 +6,14 @@
 #include <curl/curl.h>
 #include "common.h"
 
-char* getAuthHeader(char* token, size_t tokenSize) {
-  char* authHeader = malloc(sizeof(char) * 20 + tokenSize);
-  if (authHeader == NULL) return NULL;
-  strcpy(authHeader, "Authorization: JWT ");
-  strcat(authHeader, token);
-  return authHeader;
-}
-
-RequestResult initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader, struct curl_slist *headerList) {
-  headerList = curl_slist_append(headerList, authHeader);
+CURLcode initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader) {
+  struct curl_slist *headerList = curl_slist_append(headerList, authHeader);
   curl_slist_append(headerList, "User-Agent: streetrelay-3ds/" VERSION);
 
   char* url = malloc(sizeof(BASE_URL) + sizeof(path));
-  if (url == NULL) return RR_OUT_OF_MEMORY;
+  if (url == NULL) return -1;
   strcpy(url, BASE_URL);
   strcat(url, path);
-
   curl_easy_setopt(curl, CURLOPT_URL, url);
   free(url);
   
@@ -43,6 +34,8 @@ RequestResult initRequest(CURL *curl, const RequestMethod method, const char* pa
     case M_DELETE:
       break;
   }
+
+  return curl_easy_perform(curl);
 }
 
 void hang() {

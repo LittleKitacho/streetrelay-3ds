@@ -1,3 +1,9 @@
 #include <3ds/result.h>
 
-Result login(char* oldToken, bool* succeeded, char* newToken);
+typedef enum {
+  AUTH_CURL = 0x100,
+  AUTH_UPDATE_REQUIRED = 0x200,
+  AUTH_OUT_OF_MEM = 0x300,
+} AuthResult;
+
+AuthResult refreshToken(const char* oldToken, size_t oldTokenSize, bool* succeeded, char* newToken);

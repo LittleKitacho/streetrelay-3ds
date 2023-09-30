@@ -6,10 +6,6 @@
 #define VERSION "1.0.0"
 
 typedef enum {
-  RR_OUT_OF_MEMORY,
-} RequestResult;
-
-typedef enum {
   M_GET,
   M_POST,
   M_PUT,
@@ -17,8 +13,6 @@ typedef enum {
   M_DELETE
 } RequestMethod;
 
-char* getAuthHeader(char* token, size_t tokenSize);
-
-RequestResult initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader, struct curl_slist *headerList);
+CURLcode initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader);
 
 void hang();

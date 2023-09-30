@@ -38,80 +38,60 @@ int main(int argc,char*argv[]) {
 	}
 
   mkdir("streetrelay", 777);
-
-	FILE* file;
-	int exists = access("streetrelay/cred.txt", F_OK);
-	if (exists == 0) {
-		file = fopen("streetrelay/cred.txt", "r+");
-	} else {
-		file = fopen("streetrelay/cred.txt","w+");
-	}
+	struct stat fileStat;
+	int exists = stat("sdmc:/streetrelay/cred.txt", &fileStat);
+	char* token;
 	
-	if (file == NULL) {
-		printf("Could not open file");
-		hang();
-		goto exit;
-	}
-
-	fseek(file, 0, SEEK_END);
-	off_t size = ftell(file);
-	fseek(file, 0, SEEK_SET);
-
-	if (size == 0) {
-		printf("cred.txt is empty\n");
-		hang();
-		goto exit;
-	}
-
-	char* oldToken = malloc(size);
-	size_t read = fread(oldToken, size, 1, file);
-
-	if (read != size) {
-		if (feof(file)) {
-			printf("Unexpected EOF in cred.txt");
-			hang();
-			goto exit;
-		} else if (ferror(file)) {
-			printf("Error while reading cred.txt");
+	if (exists == 0 && fileStat.st_size != 0) {
+		// file exists
+		// read file
+		FILE *file = fopen("sdmc:/streetrelay/cred.txt", "r");
+		if (file == NULL) {
+			printf("could not open file\n");
+			// TODO prompt login
 			hang();
 			goto exit;
 		}
-	}
-	fclose(file);
+		char* oldToken = malloc(fileStat.st_size);
+		fread(oldToken, fileStat.st_size, 1, file);
+		fclose(file);
+		// attempt login
+		bool success;
+		AuthResult res = refreshToken(oldToken, fileStat.st_size, &success, token);
+		free(oldToken);
+		if (res & AUTH_CURL) {
+			printf("cURL error [%d]", res ^ AUTH_CURL);
+			hang();
+			goto exit;
+		} if (res == AUTH_UPDATE_REQUIRED) {
+			printf("Update required. Download the latest version of StreetRelay (3DS) from GitHub to use StreetRelay.");
+			hang();
+			goto exit;
+		} if (res == AUTH_OUT_OF_MEM) {
+			printf("Out of memory");
+			hang();
+			goto exit;
+		}
 
-	char* authHeader = getAuthHeader(oldToken, size);
-	if (authHeader == NULL) {
-		printf("Out of memory\n");
+		if (success) {
+			printf("login success!");
+			hang();
+			goto exit;
+		} else {
+			// prompt login
+			printf("token invalid");
+			hang();
+			goto exit;
+		}
+	} else {
+		// file does not exist
+		// prompt login
+		printf("credential file does not exist");
 		hang();
 		goto exit;
 	}
-	free(oldToken);
-
-	CURL* curl = curl_easy_init();
-	struct curl_slist *headers;
-	if (curl == NULL) {
-		printf("Out of memory\n");
-		hang();
-		goto exit;
-	}
-	initRequest(curl, M_GET, "/login", authHeader, headers);
-	CURLcode ret = curl_easy_perform(curl);
-	curl_slist_free_all(headers);
-
-	if (ret != CURLE_OK) {
-		printf("An error occured: CURL %d\n", ret);
-		hang();
-		goto exit;
-	}
-	
-	long responseCode;
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-	printf("Response code: %lu\n", responseCode);
-	curl_easy_cleanup(curl);
-	hang();
 	
 	exit:
-	free(authHeader);
 	curl_global_cleanup();
 	socExit();
 	free(socBuffer);
