@@ -31,11 +31,14 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
+APP_TITLE := StreetRelay Client
+APP_DESCRIPTION := Download your StreetPass tags from StreetRelay
+APP_AUTHOR := LittleKitacho
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source libctru-cecd/source libctru-cecd/source/3ds/services/cec
 DATA		:=	data
-INCLUDES	:=	include
+INCLUDES	:=	include libctru-cecd/include libctru-cecd/include/3ds/services/cec
 GRAPHICS	:=	gfx
 #GFXBUILD	:=	$(BUILD)
 ROMFS		:=	romfs
@@ -50,20 +53,20 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -D__3DS__
+CFLAGS	+=	$(INCLUDE) -D__3DS__ `curl-config --cflags`
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcitro2d -lcitro3d -lctru -lm
+LIBS	:= -lcitro2d -lcitro3d -lctru -lm `curl-config --libs`
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB) /mnt/c/devkitPro/devkitARM
+LIBDIRS	:= $(CTRULIB) /mnt/c/devkitPro/devkitARM $(PORTLIBS)
 
 
 #---------------------------------------------------------------------------------

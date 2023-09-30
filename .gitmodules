@@ -1,0 +1,3 @@
+[submodule "libctru-cecd"]
+	path = libctru-cecd
+	url = git@github.com:NarcolepticK/libctru-cecd.git
