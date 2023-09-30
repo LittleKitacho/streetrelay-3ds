@@ -54,8 +54,14 @@ int main(int argc,char*argv[]) {
 	}
 
 	fseek(file, 0, SEEK_END);
-	size_t size = ftell(file);
+	off_t size = ftell(file);
 	fseek(file, 0, SEEK_SET);
+
+	if (size == 0) {
+		printf("cred.txt is empty\n");
+		hang();
+		goto exit;
+	}
 
 	char* oldToken = malloc(size);
 	size_t read = fread(oldToken, size, 1, file);
