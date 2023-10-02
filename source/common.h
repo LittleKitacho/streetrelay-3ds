@@ -13,6 +13,6 @@ typedef enum {
   M_DELETE
 } RequestMethod;
 
-CURLcode initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader);
+int initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader);
 
 void hang();

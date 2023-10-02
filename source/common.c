@@ -6,8 +6,8 @@
 #include <curl/curl.h>
 #include "common.h"
 
-CURLcode initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader) {
-  struct curl_slist *headerList = curl_slist_append(headerList, authHeader);
+int initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader) {
+  struct curl_slist *headerList = curl_slist_append(NULL, authHeader);
   curl_slist_append(headerList, "User-Agent: streetrelay-3ds/" VERSION);
 
   char* url = malloc(sizeof(BASE_URL) + sizeof(path));
@@ -20,6 +20,8 @@ CURLcode initRequest(CURL *curl, const RequestMethod method, const char* path, c
   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerList);
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
+  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
   switch (method) {
     case M_GET:
@@ -35,7 +37,7 @@ CURLcode initRequest(CURL *curl, const RequestMethod method, const char* path, c
       break;
   }
 
-  return curl_easy_perform(curl);
+  return 0;
 }
 
 void hang() {

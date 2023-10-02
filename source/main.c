@@ -37,15 +37,15 @@ int main(int argc,char*argv[]) {
 		goto exit;
 	}
 
-  mkdir("streetrelay", 777);
+  mkdir("sdmc:/3ds/streetrelay", 777);
 	struct stat fileStat;
-	int exists = stat("sdmc:/streetrelay/cred.txt", &fileStat);
-	char* token;
+	int exists = stat("sdmc:/3ds/streetrelay/cred.txt", &fileStat);
+	char* token = NULL;
 	
 	if (exists == 0 && fileStat.st_size != 0) {
 		// file exists
 		// read file
-		FILE *file = fopen("sdmc:/streetrelay/cred.txt", "r");
+		FILE *file = fopen("sdmc:/3ds/streetrelay/cred.txt", "r");
 		if (file == NULL) {
 			printf("could not open file\n");
 			// TODO prompt login
