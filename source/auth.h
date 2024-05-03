@@ -1,11 +1,5 @@
 #include <3ds/result.h>
 
-typedef enum {
-  AUTH_CURL = 0x100,
-  AUTH_UPDATE_REQUIRED = 0x200,
-  AUTH_OUT_OF_MEM = 0x300,
-  AUTH_SERVER_ERROR = 0x400,
-  AUTH_INVALID_TOKEN_RETURN = 0x500
-} AuthResult;
+char *get_auth_header(const char *token, size_t tokenSize);
 
-AuthResult refreshToken(const char* oldToken, size_t oldTokenSize, bool* succeeded, char* newToken);
+bool auth_perform_refresh(const char *auth_header, char **new_token, off_t *new_token_size);

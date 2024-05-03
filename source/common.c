@@ -6,47 +6,60 @@
 #include <curl/curl.h>
 #include "common.h"
 
-int initRequest(CURL *curl, const RequestMethod method, const char* path, const char* authHeader) {
-  struct curl_slist *headerList = curl_slist_append(NULL, authHeader);
-  curl_slist_append(headerList, "User-Agent: streetrelay-3ds/" VERSION);
+CURLcode init_request(CURL *curl, const char *url, const char *authHeader, struct curl_slist **headers)
+{
+  *headers = curl_slist_append(NULL, authHeader);
+  curl_slist_append(*headers, "User-Agent: streetrelay-3ds/" VERSION);
+  curl_slist_append(*headers, "Accept: application/json");
+  curl_slist_append(*headers, "Accept: application/octet-stream");
 
-  char* url = malloc(sizeof(BASE_URL) + sizeof(path));
-  if (url == NULL) return -1;
-  strcpy(url, BASE_URL);
-  strcat(url, path);
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  free(url);
-  
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerList);
-  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
-  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+  CURLcode res = curl_easy_setopt(curl, CURLOPT_URL, url);
+  if (res != CURLE_OK)
+    return res;
 
-  switch (method) {
-    case M_GET:
-      // curl_easy_setopt(curl, CURLOPT_HTTPGET, "GET");
-      break;
-    case M_POST:
-      break;
-    case M_PUT:
-      break;
-    case M_PATCH:
-      break;
-    case M_DELETE:
-      break;
-  }
-
-  return 0;
+  res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, *headers);
+  if (res != CURLE_OK)
+    return res;
+  res = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  if (res != CURLE_OK)
+    return res;
+  res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+  if (res != CURLE_OK)
+    return res;
+  res = curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
+  if (res != CURLE_OK)
+    return res;
+  return curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 }
 
-void hang() {
-	while (aptMainLoop()) {
-		gspWaitForVBlank();
-		hidScanInput();
-		u32 kDown = hidKeysDown();
-		if (kDown & KEY_START) break;
-		gfxFlushBuffers();
-		gfxSwapBuffers();
-	}
+size_t downloadDataCallback(void *data, size_t size, size_t nmemb, void *handle)
+{
+  DownloadDataMemory *memory = (DownloadDataMemory *)handle;
+
+  size_t available = size * nmemb;
+  void *ptr = realloc(memory->buffer, memory->size + available + 1);
+  if (ptr == NULL)
+  {
+    printf("Ran out of memory while downloading data!");
+    return 0;
+  }
+
+  memcpy(&(memory->buffer[memory->size]), data, available);
+  memory->size += available;
+  memory->buffer[memory->size] = 0;
+  return available;
+}
+
+void hang()
+{
+  while (aptMainLoop())
+  {
+    gspWaitForVBlank();
+    hidScanInput();
+    u32 kDown = hidKeysDown();
+    if (kDown & KEY_START)
+      break;
+    gfxFlushBuffers();
+    gfxSwapBuffers();
+  }
 }
