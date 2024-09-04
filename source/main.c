@@ -14,6 +14,7 @@
 #include "storage.h"
 #include "auth.h"
 #include "profile.h"
+#include "tags.h"
 
 bool running = false;
 
@@ -103,11 +104,12 @@ login:
 		goto exit;
 	}
 
-	// if (!synchronize_data())
-	// {
-	// 	hang();
-	// 	goto exit;
-	// }
+	if (!synchronizeData(authHeader))
+	{
+		printf("Press START to exit.");
+		hang();
+		goto exit;
+	}
 
 exit:
 	free(token);
